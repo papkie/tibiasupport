@@ -1,24 +1,52 @@
 // CONFIG
 
 const hotkeys = {
-  hp: [{
-    type: 'lt', //less than
-    percent: 90,
-    hotkey: 'f4',
-    interval: 2, //seconds
-  }],
+  hp: [
+    {
+      type: 'lt', //less than
+      percent: 70,
+      hotkey: 'f3',
+      interval: 1.1, //seconds
+    },
+    {
+      type: 'lt', //less than
+      percent: 20,
+      hotkey: 'f1',
+      interval: 1.1, //seconds
+    }
+  ],
   mp: [{
     type: 'gt', //greater than
-    percent: 20,
-    hotkey: 'f5',
+    percent: 95,
+    hotkey: 'f4',
+    interval: 3, //seconds
+  }, {
+    type: 'lt', //less than
+    percent: 10,
+    hotkey: 'f2',
     interval: 2, //seconds
-  }]
+  }],
+  interval: []
+  //  [{
+  //   hotkey: 'f5',
+  //   interval: 35, //seconds
+  // }]
 }
 
 
 
 // FUNCTIONS
-var robot = require("robotjs");
+const robot = require("robotjs");
+const activeWindow = require('active-window')
+
+async function getActiveWindow() {
+  return new Promise(resolve => {
+    activeWindow.getActiveWindow(window => {
+      resolve(window.title)
+    });
+  })
+
+}
 
 async function waitForButton() {
   return new Promise(res => {
@@ -72,7 +100,7 @@ function calculateCurrentBar(barSetting) {
     }
     pos.x++
   }
-  return (pos.x - barSetting.range[0].x)/(barSetting.range[1].x - barSetting.range[0].x)
+  return (pos.x - barSetting.range[0].x) / (barSetting.range[1].x - barSetting.range[0].x)
 }
 
 let barSettings = {
@@ -121,38 +149,56 @@ async function go() {
 
 go().catch(console.error)
 
-let jobTimestamps = []
+let jobTimestamps = {}
 
-function watcher() {
-  let jobId = 0
-  hotkeys.hp.forEach(hotkey => {
-    if (Date.now() - (hotkey.interval*1000) < jobTimestamps[jobId]) {
-      return
-    }
-    const currentHp = calculateCurrentBar(barSettings.hp) * 100
-    if (hotkey.type === 'gt' && currentHp > hotkey.percent) {
-      robot.keyTap(hotkey.hotkey)
-    }
-    if (hotkey.type === 'lt' && currentHp < hotkey.percent) {
-      robot.keyTap(hotkey.hotkey)
-    }
-    jobTimestamps[jobId++] = Date.now()
-  })
-  hotkeys.mp.forEach(hotkey => {
-    if (Date.now() - (hotkey.interval*1000) < jobTimestamps[jobId]) {
-      return
-    }
-    const currentMp = calculateCurrentBar(barSettings.mp) * 100
-    if (hotkey.type === 'gt' && currentMp > hotkey.percent) {
-      robot.keyTap(hotkey.hotkey)
-    }
-    if (hotkey.type === 'lt' && currentMp < hotkey.percent) {
-      robot.keyTap(hotkey.hotkey)
-    }
-    jobTimestamps[jobId++] = Date.now()
-  })
+async function watcher() {
+  const clientName = await getActiveWindow()
+  if (clientName.indexOf("Tibia - ") === 1 || clientName.indexOf("Tibia - ") === 0) {
+    
+    let jobId = 0
+    hotkeys.hp.forEach((hotkey, index) => {
+      if ((Date.now() - (hotkey.interval * 1000)) < jobTimestamps['hp' + index]) {
+        return
+      }
+      const currentHp = calculateCurrentBar(barSettings.hp) * 100
+      if (hotkey.type === 'gt' && currentHp > hotkey.percent) {
+        robot.keyTap(hotkey.hotkey)
+        console.log(`hp greater than (${currentHp} > ${hotkey.percent}), using ${hotkey.hotkey}`);
+      }
+      if (hotkey.type === 'lt' && currentHp < hotkey.percent) {
+        robot.keyTap(hotkey.hotkey)
+        console.log(`hp less than (${currentHp} < ${hotkey.percent}), using ${hotkey.hotkey}`);
+      }
+      jobTimestamps['hp' + index] = Date.now()
+    })
+    hotkeys.mp.forEach((hotkey, index) => {
+      if ((Date.now() - (hotkey.interval * 1000)) < jobTimestamps['mp' + index]) {
+        return
+      }
+      const currentMp = calculateCurrentBar(barSettings.mp) * 100
+      if (hotkey.type === 'gt' && currentMp > hotkey.percent) {
+        robot.keyTap(hotkey.hotkey)
+        console.log(`mp greater than (${currentMp} > ${hotkey.percent}), using ${hotkey.hotkey}`);
 
+      }
+      if (hotkey.type === 'lt' && currentMp < hotkey.percent) {
+        robot.keyTap(hotkey.hotkey)
+        console.log(`mp less than (${currentMp} < ${hotkey.percent}), using ${hotkey.hotkey}`);
+      }
+      jobTimestamps['mp' + index] = Date.now()
+
+    })
+    hotkeys.interval.forEach((hotkey, index) => {
+      if ((Date.now() - (hotkey.interval * 1000)) < jobTimestamps['interval' + index]) {
+        return
+      }
+      robot.keyTap(hotkey.hotkey)
+      console.log(`interval, using ${hotkey.hotkey}`);
+      jobTimestamps['interval' + index] = Date.now()
+
+    })
+  }
   setTimeout(() => {
-    watcher()
+    watcher().catch(console.error)
   }, 100);
 }
