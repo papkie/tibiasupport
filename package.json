@@ -4,11 +4,33 @@
   "description": "TibiaSupport for Tibia 11",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start-ui": "electron bin/main.js",
+    "start": "nodemon",
+    "compile": "tsc",
+    "watch": "webpack-dev-server -d --history-api-fallback --hot --inline --progress --colors --port 8080 --open"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "robotjs": "^0.4.7"
+    "electron": "~1.7.8",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "robotjs": "^0.4.7",
+    "typescript": "^2.6.2"
+  },
+  "devDependencies": {
+    "@types/react": "^16.0.35",
+    "@types/react-dom": "^16.0.3",
+    "awesome-typescript-loader": "^3.4.1",
+    "css-loader": "^0.28.9",
+    "electron-packager": "^10.1.2",
+    "electron-rebuild": "^1.7.3",
+    "less": "^2.7.3",
+    "less-loader": "^4.0.5",
+    "node-libs-browser": "^2.1.0",
+    "nodemon": "^1.14.11",
+    "style-loader": "^0.20.1",
+    "webpack": "^3.10.0",
+    "webpack-dev-server": "^2.11.1"
   }
 }
